@@ -1,1 +1,168 @@
+syntax = "proto3";
 
+package shopping;
+
+message Product {
+    string name = 1;
+    string description = 2;
+    float price = 3;
+    int32 stock_quantity = 4;
+    string sku = 5;
+    bool available = 6;
+}
+
+message User {
+    string user_id = 1;
+    string user_type = 2; // "customer" or "admin"
+}
+
+message AddProductRequest {
+    Product product = 1;
+}
+
+message AddProductResponse {
+    string sku = 1; // SKU of the added product
+}
+
+message UpdateProductRequest {
+    string sku = 1;
+    Product product = 2;
+}
+
+message RemoveProductRequest {
+    string sku = 1;
+}
+
+message RemoveProductResponse {
+    repeated Product products = 1; // Updated list of products
+}
+
+message ListAvailableProductsResponse {
+    repeated Product products = 1;
+}
+
+message SearchProductRequest {
+    string sku = 1;
+}
+
+message SearchProductResponse {
+    Product product = 1;
+    string message = 2; // Status message
+}
+
+message AddToCartRequest {
+    string user_id = 1;
+    string sku = 2;
+}
+
+message PlaceOrderRequest {
+    string user_id = 1;
+}
+
+message CreateUsersRequest {
+    repeated User users = 1;
+}
+
+message CreateUsersResponse {
+    string message = 1; // Confirmation message
+}
+
+service ShoppingService {
+    rpc AddProduct(AddProductRequest) returns (AddProductResponse);
+    rpc CreateUsers(stream CreateUsersRequest) returns (CreateUsersResponse);
+    rpc UpdateProduct(UpdateProductRequest) returns (google.protobuf.Empty);
+    rpc RemoveProduct(RemoveProductRequest) returns (RemoveProductResponse);
+    rpc ListAvailableProducts(google.protobuf.Empty) returns (ListAvailableProductsResponse);
+    rpc SearchProduct(SearchProductRequest) returns (SearchProductResponse);
+    rpc AddToCart(AddToCartRequest) returns (google.protobuf.Empty);
+    rpc PlaceOrder(PlaceOrderRequest) returns (google.protobuf.Empty);
+}import ballerina/grpc;
+import ballerina/log;
+import ballerina/http;
+import ballerina/time;
+
+service shoppingService on new grpc:Listener(8080) {
+
+    // In-memory product storage
+    map<Product> products = {};
+    map<map<string>> carts = {}; // user_id -> SKU list
+
+    // Add a new product
+    resource function addProduct(AddProductRequest req) returns AddProductResponse|error {
+        Product newProduct = req.product;
+        products[newProduct.sku] = newProduct;
+        return {sku: newProduct.sku};
+    }
+
+    // Create multiple users (customers/admins)
+    resource function createUsers(stream CreateUsersRequest req) returns CreateUsersResponse|error {
+        // Handle streamed users
+        return {message: "Users created successfully"};
+    }
+
+    // Update product details
+    resource function updateProduct(UpdateProductRequest req) returns error? {
+        if products.hasKey(req.sku) {
+            products[req.sku] = req.product;
+        } else {
+            return error("Product not found");
+        }
+    }
+
+    // Remove a product
+    resource function removeProduct(RemoveProductRequest req) returns RemoveProductResponse|error {
+        if products.remove(req.sku) {
+            return {products: products.values()};
+        } else {
+            return error("Product not found");
+        }
+    }
+
+    // List available products
+    resource function listAvailableProducts() returns ListAvailableProductsResponse {
+        ListAvailableProductsResponse response = {};
+        foreach var product in products.values() {
+            if product.available {
+                response.products.push(product);
+            }
+        }
+        return response;
+    }
+
+    // Search for a product
+    resource function searchProduct(SearchProductRequest req) returns SearchProductResponse|error {
+        if products.hasKey(req.sku) {
+            return {product: products[req.sku], message: "Product found"};
+        } else {
+            return {message: "Product not found"};
+        }
+    }
+
+    // Add to cart
+    resource function addToCart(AddToCartRequest req) returns error? {
+        if !carts.hasKey(req.user_id) {
+            carts[req.user_id] = {};
+        }
+        carts[req.user_id][req.sku] = true;
+    }
+
+    // Place an order
+    resource function placeOrder(PlaceOrderRequest req) returns error? {
+        // Handle placing order logic here
+    }
+}import ballerina/grpc;
+import ballerina/log;
+
+public function main() returns error? {
+    // Create a client
+    ShoppingServiceClient shoppingClient = check ShoppingServiceClient.create("localhost:8080");
+
+    // Example: Adding a new product
+    Product product = {name: "Laptop", description: "High performance laptop", price: 999.99, stock_quantity: 10, sku: "LAP123", available: true};
+    AddProductResponse addResponse = check shoppingClient.addProduct({product: product});
+    log:printInfo("Product added with SKU: " + addResponse.sku);
+
+    // Example: Listing available products
+    ListAvailableProductsResponse listResponse = check shoppingClient.listAvailableProducts();
+    log:printInfo("Available Products: " + listResponse.products.toString());
+}
