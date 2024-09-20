@@ -24,7 +24,7 @@ type Course record {
 };
 
 type Programme record {
-    string programmeCode;
+    readonly string programmeCode;
     int nqfLevel;
     string faculty;
     string department;
@@ -34,37 +34,46 @@ type Programme record {
 };
 
 map<Programme> programmes = {};
-int reviewPeriodInYears = 4;
+int reviewPeriodInYears = 5;
 
 service /dsa_assignment on new http:Listener(9090) {
+
+    table<Programme> key(programmeCode) programmestable = table [];
+
+    //Return all programmes with specific programme code
     resource function get .(string programmeCode) returns Programme?|error {
         if (!programmes.hasKey(programmeCode)) {
-            return programmes[programmeCode];
+            return error("Programme with that programmeCode can't be found");
         }
-        return error("programme with that progrmmeCode can't be found");
+        return programmes[programmeCode];
 
     }
-}
 
-function post(@http:Payload Programme newProgramme) returns http:Created|http:Error {
+    // Add a new programme
+    function post(@http:Payload Programme newProgramme) returns http:Created|http:Error {
     if (programmes.hasKey(newProgramme.programmeCode)) {
         return error("Programme already exists");
     }
     programmes[newProgramme.programmeCode] = newProgramme;
     return http:CREATED;
-}
+    }
 
-function put(string programmeCode, @http:Payload Programme updatedProgramme) returns http:Ok|error? {
+    // Update an existing programme's info
+    function put(string programmeCode, @http:Payload Programme updatedProgramme) returns http:Ok|error? {
     if (!programmes.hasKey(programmeCode)) {
         return error("The programme cannot be found!!");
     }
     programmes[programmeCode] = updatedProgramme;
     return http:OK;
 
-}
+    }
 
-function delete(string programmeCode) returns error|http:NoContentError{
+    // Delete a programme
+    function delete(string programmeCode) returns error|Programme{
     if (!programmes.hasKey(programmeCode)) {
         return  error("Programme not found!!");
     }
-    
+    Programme programme = self.programmestable.remove(programmeCode);
+    return programme;
+    }
+}  
