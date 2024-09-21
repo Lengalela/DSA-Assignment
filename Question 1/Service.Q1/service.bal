@@ -41,7 +41,7 @@ service /dsa_assignment on new http:Listener(9090) {
     table<Programme> key(programmeCode) programmestable = table [];
 
     //Return all programmes with specific programme code
-    resource function get .(string programmeCode) returns Programme?|error {
+    resource function get allspecific(string programmeCode) returns Programme?|error {
         if (!programmes.hasKey(programmeCode)) {
             return error("Programme with that programmeCode can't be found");
         }
@@ -50,7 +50,7 @@ service /dsa_assignment on new http:Listener(9090) {
     }
 
     // Add a new programme
-    function post(@http:Payload Programme newProgramme) returns http:Created|http:Error {
+    resource function post addition(@http:Payload Programme newProgramme) returns http:Created|http:Error {
     if (programmes.hasKey(newProgramme.programmeCode)) {
         return error("Programme already exists");
     }
@@ -58,8 +58,14 @@ service /dsa_assignment on new http:Listener(9090) {
     return http:CREATED;
     }
 
+    // Retrieve a list of all programme within the Programme Development Unit.
+    resource function get all() returns table<Programme> key(programmeCode) {
+
+        return self.programmestable;    
+    }
+
     // Update an existing programme's info
-    function put(string programmeCode, @http:Payload Programme updatedProgramme) returns http:Ok|error? {
+    resource function put update(string programmeCode, @http:Payload Programme updatedProgramme) returns http:Ok|error? {
     if (!programmes.hasKey(programmeCode)) {
         return error("The programme cannot be found!!");
     }
@@ -68,7 +74,7 @@ service /dsa_assignment on new http:Listener(9090) {
 
     }
 
-    // Delete a programme
+    // Delete a programme by its specific programme code
     function delete(string programmeCode) returns error|Programme{
     if (!programmes.hasKey(programmeCode)) {
         return  error("Programme not found!!");
