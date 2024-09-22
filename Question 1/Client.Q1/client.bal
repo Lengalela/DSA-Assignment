@@ -129,14 +129,15 @@ function CLI(string cli) returns error?{
         }
 
         "6" => {
-            io:println("All programs which are due:");
+            io:println("All programmes which are due:");
             Programme programme = check client_q1->/due;
             io:println(programme);
         }
 
         "7" => {
-            io:println("Retrieving all programs which are due...");
-            Programme[] programme = check client_q1->/due;
+            io:println("All programmes which belong to Faculty..");
+            string faculty = io:readln("Faculty: ");
+            Programme programme = check client_q1->/specificFac(faculty=faculty);
             io:println(programme);
         }
     }
