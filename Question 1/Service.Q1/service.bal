@@ -1,20 +1,5 @@
 import ballerina/http;
 
-# A service representing a network-accessible API
-# bound to port `9090`.
-service / on new http:Listener(9090) {
-
-    # A resource for generating greetings
-    # + name - name as a string or nil
-    # + return - string name with hello message or error
-    resource function get greeting(string? name) returns string|error {
-        // Send a response back to the caller.
-        if name is () {
-            return error("name should not be empty!");
-        }
-        return string `Hello, ${name}`;
-    }
-}
 
 type Course record {
     string courseCode;
@@ -24,11 +9,11 @@ type Course record {
 
 type Programme record {
     readonly string programmeCode;
-    int nqfLevel;
+    string nqfLevel;
     string faculty;
     string department;
     string title;
-    int registrationYear;
+    string registrationYear;
     Course[] courses;
 };
 
@@ -40,12 +25,12 @@ service /dsa_assignment on new http:Listener(9090) {
     
 
     // Add a new programme
-    resource function post addition(@http:Payload Programme newProgramme) returns http:Created|http:Error {
+    resource function post addition(Programme newProgramme) returns Programme|error {
     if (programmestable.hasKey(newProgramme.programmeCode)) {
         return error("Programme already exists");
     }
-    programmestable.add(newProgramme);
-    return http:CREATED;
+    programmestable.put(newProgramme);
+    return newProgramme;
     }
 
     //Return all programmes with specific programme code
@@ -73,8 +58,8 @@ service /dsa_assignment on new http:Listener(9090) {
     }
 
     // Retrieve a list of all programme within the Programme Development Unit.
-    resource function get all() returns table<Programme> key(programmeCode) {
-        return programmestable;    
+    resource function get all() returns table<Programme> {
+        return programmestable;   
     }
 
     // Update an existing programme's info
@@ -124,13 +109,16 @@ service /dsa_assignment on new http:Listener(9090) {
     }
 
     //Retrieve all the programmes that are due for review
-    resource function get due() returns Programme[]|string {
+    resource function get due() returns Programme[]|string|error {
         int currentYear = 2024;
+        
         Programme[] dueForReview = [];
         
         foreach Programme programme in programmestable {
             // Check if the programme is older than the review period
-            if ((currentYear - programme.registrationYear) >= reviewPeriodInYears) {
+            string newRYear = programme.registrationYear;
+            int newRYearr = check int:fromString(newRYear);
+            if ((currentYear - newRYearr) >= reviewPeriodInYears) {
                 dueForReview.push(programme);
             }
         }

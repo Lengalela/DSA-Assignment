@@ -13,7 +13,7 @@ type Programme record {
     string faculty;
     string department;
     string title;
-    int registrationDate;
+    string registrationYear;
     Course[] courses;
 };
 
@@ -50,8 +50,7 @@ function CLI(string cli) returns error?{
             string nqfLevel = io:readln("NQF Level of Programme: ");
             string faculty=io:readln("Enter the faculty: ");
             string department=io:readln("Department of Programme: ");
-            string input = io:readln("Year of registration: ");
-            int registrationDate = check int:fromString(input);
+            string registrationYear = io:readln("Year of registration: ");
             string NumC = io:readln("Number of courses: ");
             int numOfCourse = check int:fromString(NumC);
             Programme programme = {
@@ -60,7 +59,7 @@ function CLI(string cli) returns error?{
                 nqfLevel: nqfLevel,
                 faculty: faculty,
                 department: department,
-                registrationDate: registrationDate,
+                registrationYear: registrationYear,
                 courses: []
             };
 
@@ -74,14 +73,14 @@ function CLI(string cli) returns error?{
                 programme.courses.push(course);
             }
 
-            Programme programmeResponse = check client_q1->/addition.post(programme); 
-           io:println(programmeResponse);
+            Programme programmeResp = check client_q1->/addition.post(programme); 
+           io:println(programmeResp);
         }
 
         "2" => {
-            table<Programme> programmestable = check client_q1->/all;
+            table<Programme> programmestables = check client_q1->/all;
             io:println("All programmes\n");
-            io:println(programmestable);
+            io:println(programmestables);
         }
 
         "3" => {
@@ -90,8 +89,7 @@ function CLI(string cli) returns error?{
             string nqfLevel = io:readln("NQF Level of Programme: ");
             string faculty=io:readln("Enter the faculty: ");
             string department=io:readln("Department of Programme: ");
-            string input = io:readln("Year of registration");
-            int registrationDate = check int:fromString(input);
+            string registrationYear = io:readln("Year of registration");
             string NumC = io:readln("Number of courses: ");
             int numOfCourse = check int:fromString(NumC);
             Programme programme = {
@@ -100,7 +98,7 @@ function CLI(string cli) returns error?{
                 nqfLevel: nqfLevel,
                 faculty: faculty,
                 department: department,
-                registrationDate: registrationDate,
+                registrationYear: registrationYear,
                 courses: []
             };
             foreach int i in 0...numOfCourse-1 {
