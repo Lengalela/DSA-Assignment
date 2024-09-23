@@ -13,7 +13,8 @@ message Product {
 
 message User {
     string user_id = 1;
-    string user_type = 2; // "customer" or "admin"
+    string name = 2
+    string role = 3; // "customer" or "admin"
 }
 
 message AddProductRequest {
