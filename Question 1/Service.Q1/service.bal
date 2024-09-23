@@ -58,8 +58,12 @@ service /dsa_assignment on new http:Listener(9090) {
     }
 
     // Retrieve a list of all programme within the Programme Development Unit.
-    resource function get all() returns table<Programme> {
-        return programmestable;   
+    resource function get all() returns Programme[] {
+        Programme[] allProgrammes = [];
+        foreach Programme programme in programmestable {
+            allProgrammes.push(programme);
+        }
+        return allProgrammes;   
     }
 
     // Update an existing programme's info
@@ -70,19 +74,19 @@ service /dsa_assignment on new http:Listener(9090) {
             Programme existingProgramme = existingProgrammeOpt;  // Now it's safely cast to `Programme`.
 
             // Update only the fields that are provided in the `updatedProgramme`
-            if updatedProgramme.nqfLevel != existingProgramme.nqfLevel {
+            if updatedProgramme.nqfLevel != "" {
                 existingProgramme.nqfLevel = updatedProgramme.nqfLevel;
             }
-            if updatedProgramme.faculty != existingProgramme.faculty {
+            if updatedProgramme.faculty != "" {
                 existingProgramme.faculty = updatedProgramme.faculty;
             }
-            if updatedProgramme.department != existingProgramme.department {
+            if updatedProgramme.department != "" {
                 existingProgramme.department = updatedProgramme.department;
             }
-            if updatedProgramme.title != existingProgramme.title {
+            if updatedProgramme.title != "" {
                 existingProgramme.title = updatedProgramme.title;
             }
-            if updatedProgramme.registrationYear != existingProgramme.registrationYear {
+            if updatedProgramme.registrationYear != "" {
                 existingProgramme.registrationYear = updatedProgramme.registrationYear;
             }
             if updatedProgramme.courses.length() > 0 {
@@ -100,9 +104,9 @@ service /dsa_assignment on new http:Listener(9090) {
     }
 
     // Delete a programme by its specific programme code
-    resource function put remove(string programmeCode) returns error|Programme{
+    resource function delete removeP(string programmeCode) returns error|Programme{
     if (!programmestable.hasKey(programmeCode)) {
-        return  error("Programme not found!!");
+        return error("Programme not found!!");
     }
     Programme programme = programmestable.remove(programmeCode);
     return programme;

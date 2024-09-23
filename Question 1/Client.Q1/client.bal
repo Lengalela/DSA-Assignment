@@ -110,34 +110,45 @@ function CLI(string cli) returns error?{
                 Course course = {courseCode:courseCode, courseName:courseName, nqfLevel:nqfLevel2};
                 programme.courses.push(course);
             }
-            Programme programmeResp = check client_q1->/update.put(programme); 
+            Programme programmeResp = check client_q1->/update.put(programme, programmeCode=programmeCode); 
            io:println(programmeResp);
         }
 
         "4" => {
             string programmeCode = io:readln("Programme Code: ");
-            Programme programme = check client_q1->/programmestable/[programmeCode];
+            Programme programme = check client_q1->/specificProg.get(programmeCode=programmeCode);
             io:println(programme);
         }
 
         "5" => {
             string programmeCode = io:readln("Programme Code: ");
-            Programme programme = check client_q1->/delete(programmeCode=programmeCode);
-            io:println(programme.toJsonString());
+            Programme programme = check client_q1->/removeP.delete(programmeCode=programmeCode);
+            io:println("Removed Programme: " + programme.toJsonString());
         }
 
         "6" => {
             io:println("All programmes which are due:");
-            Programme programme = check client_q1->/due;
-            io:println(programme);
+            Programme[] dueProgrammes = check client_q1->/due;
+            
+            // Check if there are any programmes due and print them
+            if (dueProgrammes.length() > 0) {
+                foreach Programme programme in dueProgrammes {
+                    io:println(programme.toJsonString());
+                }
+            } else {
+                io:println("No programmes are due for review!");
+                }
         }
 
         "7" => {
             io:println("All programmes which belong to Faculty..");
             string faculty = io:readln("Faculty: ");
-            Programme programme = check client_q1->/specificFac(faculty=faculty);
-            io:println(programme);
-        }
-    }
-}
+            Programme[] programmes = check client_q1->/specificFac(faculty=faculty);
+            io:println("Programmes under faculty: " + faculty);
 
+            foreach Programme programme in programmes {
+                io:println(programme.toJsonString());
+                }
+        }
+}
+}
